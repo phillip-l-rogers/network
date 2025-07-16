@@ -118,9 +118,22 @@ function insertPostCard(data) {
   postText1.id = `post-${data.post_id}`;
   postText1.innerText = data.text;
   // Created date
+  const date = new Date(data.created);
+  const options = {
+    year: "numeric",
+    month: "long", // Full month name
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true, // Use 12-hour format with AM/PM
+  };
+  let created = date
+    .toLocaleString("en-US", options)
+    .replace("AM", "a.m.")
+    .replace("PM", "p.m.");
   const postText2 = document.createElement("small");
   postText2.className = "text-muted";
-  postText2.innerText = `${data.created} by `;
+  postText2.innerText = `${created} by `;
   // User profile link
   const postUser = document.createElement("a");
   postUser.href = `/profile/${data.username}`;

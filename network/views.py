@@ -1,18 +1,25 @@
 """Provide the functions for the urls for the various views."""
 
+from __future__ import annotations
+
 import json
+from typing import TYPE_CHECKING
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import IntegrityError
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 
 from network.models import Post
 
 from .models import Post, User
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest, HttpResponse
 
 
 @login_required
@@ -68,9 +75,31 @@ def edit_post(request: HttpRequest, post_id: int) -> JsonResponse:
         return JsonResponse({"error": "Invalid JSON."}, status=400)
 
 
+@login_required
+def following(request: HttpRequest) -> HttpResponse:
+    """Show all posts for users the current user is following."""
+    # Get posts from those users only
+    posts = (
+        # Get users the current user is following
+        Post.objects.filter(user__in=request.user.following.all())
+        # Optimizes future calls to post.user
+        .select_related("user")
+        # Optimizes future calls to post.likes.count()
+        .prefetch_related("likes")
+    )
+    # Paginate
+    paginator = Paginator(posts, 10)  # 10 posts per page
+    i_page = request.GET.get("page") or 1
+    page = paginator.get_page(i_page)
+    return render(request, "network/following.html", {"page": page})
+
+
 def index(request: HttpRequest) -> HttpResponse:
     """Show all posts."""
-    posts = Post.objects.all().prefetch_related("likes")
+    # Get all posts and prefetch likes to improve performance
+    # Optimizes future calls to post.user and post.likes.count()
+    posts = Post.objects.all().select_related("user").prefetch_related("likes")
+    # Paginate
     paginator = Paginator(posts, 10)  # 10 posts per page
     i_page = request.GET.get("page") or 1
     page = paginator.get_page(i_page)
@@ -81,11 +110,12 @@ def login_view(request: HttpRequest) -> HttpResponse:
     """
     Handle the login get/post request.
 
-    Redirect to login page if get request or problems signing in.
-    Otherwise, redirect to the index page.
+    If a `next` parameter is present and safe, redirect there after login.
+    Otherwise redirect to index.
     """
+    next_url = request.GET.get("next") or request.POST.get("next") or reverse("index")
     if request.method != "POST":
-        return render(request, "network/login.html")
+        return render(request, "network/login.html", {"next": next_url})
     # Attempt to sign user in
     username = request.POST["username"]
     password = request.POST["password"]
@@ -95,22 +125,31 @@ def login_view(request: HttpRequest) -> HttpResponse:
         return render(
             request,
             "network/login.html",
-            {"message": "Invalid username and/or password."},
+            {"message": "Invalid username and/or password.", "next": next_url},
         )
     login(request, user)
-    return HttpResponseRedirect(reverse("index"))
+    # Security: only redirect to local/allowed hosts
+    if not url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        next_url = reverse("index")
+    return redirect(next_url)
 
 
 def logout_view(request: HttpRequest) -> HttpResponse:
     """Handle the logout request and redirect back to index."""
     logout(request)
-    return HttpResponseRedirect(reverse("index"))
+    return redirect(reverse("index"))
 
 
 def profile(request: HttpRequest, username: str) -> HttpResponse:
     """Show the profile for a user."""
     user = get_object_or_404(User, username=username)
-    posts = user.posts.prefetch_related("likes").select_related("user")
+    # Get user posts and pptimizes future calls to post.likes.count()
+    posts = user.posts.prefetch_related("likes")
+    # Paginate
     paginator = Paginator(posts, 10)  # 10 posts per page
     i_page = request.GET.get("page") or 1
     page = paginator.get_page(i_page)
@@ -135,11 +174,12 @@ def register(request: HttpRequest) -> HttpResponse:
     """
     Handle the register get/post request.
 
-    Redirect to register page if get request or problems registering.
-    Otherwise, redirect to the index page.
+    If a `next` parameter is present and safe, redirect there after register.
+    Otherwise redirect to index.
     """
+    next_url = request.GET.get("next") or request.POST.get("next") or reverse("index")
     if request.method != "POST":
-        return render(request, "network/register.html")
+        return render(request, "network/register.html", {"next": next_url})
     username = request.POST["username"]
     email = request.POST["email"]
     # Ensure password matches confirmation
@@ -147,7 +187,9 @@ def register(request: HttpRequest) -> HttpResponse:
     confirmation = request.POST["confirmation"]
     if password != confirmation:
         return render(
-            request, "network/register.html", {"message": "Passwords must match."}
+            request,
+            "network/register.html",
+            {"message": "Passwords must match.", "next": next_url},
         )
     # Attempt to create new user
     try:
@@ -155,10 +197,19 @@ def register(request: HttpRequest) -> HttpResponse:
         user.save()
     except IntegrityError:
         return render(
-            request, "network/register.html", {"message": "Username already taken."}
+            request,
+            "network/register.html",
+            {"message": "Username already taken.", "next": next_url},
         )
     login(request, user)
-    return HttpResponseRedirect(reverse("index"))
+    # Security: only redirect to local/allowed hosts
+    if not url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        next_url = reverse("index")
+    return redirect(next_url)
 
 
 @login_required

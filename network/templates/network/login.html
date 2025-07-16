@@ -7,6 +7,7 @@
   {% endif %}
   <form action="{% url 'login' %}" method="post">
     {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
     <div class="form-group">
       <input autofocus class="form-control" type="text" name="username" placeholder="Username">
     </div>
@@ -15,5 +16,8 @@
     </div>
     <input class="btn btn-primary" type="submit" value="Login">
   </form>
-  Don't have an account? <a href="{% url 'register' %}">Register here.</a>
+  Don't have an account?
+  <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">
+    Register here.
+  </a>
 {% endblock %}

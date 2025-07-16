@@ -1,0 +1,19 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block body %}
+  <h2>Following Posts</h2>
+  <div id="posts">
+    {% for post in page %}
+      {% include "network/partials/post_card.html" with post=post show_user=True %}
+    {% empty %}
+      <div class="card mb-3 empty-post">
+        <div class="card-body">
+          <p class="card-text">No posts yet.</p>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <!--Navigation -->
+  {% include "network/partials/nav_page.html" with page=page %}
+{% endblock %}
