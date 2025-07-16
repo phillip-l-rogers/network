@@ -21,9 +21,8 @@
           title="Log in to like posts."
         >
         ♡ {{ post.num_likes }}
-        </button>                  
-      {% endif %}
-      {% if post.user == request.user %}
+        </button>
+      {% elif post.user == request.user %}
         <!-- Like Button -->            
         <button 
           class="btn btn-sm like-button disabled" 
@@ -55,7 +54,7 @@
           {% endif %}
           {{ post.likes.count }}
         </button>     
-      {% endif %}          
+      {% endif %}
     </div>
   </div>
 </div>

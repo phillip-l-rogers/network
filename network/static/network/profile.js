@@ -9,7 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
 function attachFollowListener(followButton) {
   followButton.addEventListener("click", () => {
     const username = followButton.dataset.username;
-    const isFollowing = followButton.dataset.following === "True";
+    const isFollowing =
+      String(followButton.dataset.following).toLowerCase() === "true";
     const method = isFollowing ? "DELETE" : "POST";
     // Disable button to prevent double clicks
     followButton.disabled = true;
@@ -28,7 +29,9 @@ function attachFollowListener(followButton) {
           const numFollowers = data.num_followers;
           const followerLabel = numFollowers === 1 ? "follower" : "followers";
           followButton.textContent = data.following ? "Unfollow" : "Follow";
-          followButton.dataset.following = data.following;
+          followButton.classList.toggle("btn-danger");
+          followButton.classList.toggle("btn-primary");
+          followButton.dataset.following = data.following.toString();
           document.querySelector("#num_followers").textContent =
             `${numFollowers} ${followerLabel}`;
         }
