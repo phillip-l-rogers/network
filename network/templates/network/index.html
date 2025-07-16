@@ -1,5 +1,39 @@
 {% extends "network/layout.html" %}
+{% load static %}
+
+{% block script %}
+  <script src="{% static 'network/index.js' %}" defer></script>
+{% endblock %}   
 
 {% block body %}
-    TODO
+  <h2>All Posts</h2>
+  {% if request.user.is_authenticated %}
+    <div class="mb-3">
+      <button class="btn btn-primary" id="compose-button">📝 Create Post</button>
+    </div>
+    <!-- Compose Form (initially hidden) -->
+    <div id="compose-form" class="card mb-3 d-none">
+      <div class="card-body">
+        <form id="new-post-form">
+          <div class="form-group">
+            <textarea class="form-control" id="new-post-text" rows="3" placeholder="What's on your mind?" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-success mt-2" id="save-button">Post</button>
+        </form>
+      </div>
+    </div>
+  {% endif %}
+  <div id="posts">
+    {% for post in page %}
+      {% include "network/partials/post_card.html" with post=post show_user=True %}
+    {% empty %}
+      <div class="card mb-3 empty-post">
+        <div class="card-body">
+          <p class="card-text">No posts yet.</p>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <!--Navigation -->
+  {% include "network/partials/nav_page.html" with page=page %}
 {% endblock %}

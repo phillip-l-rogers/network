@@ -1,0 +1,45 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block title %}Social Profile{% endblock %}
+
+{% block script %}
+  <script src="{% static 'network/profile.js' %}" defer></script>
+{% endblock %}   
+
+{% block body %}
+  <div class="container-fluid mt-4 px-5">
+    <!-- Profile Info -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h2>{{ user.username }}</h2>
+        <p>
+          <span id="num_followers">{{ user.num_followers }} follower{{ user.num_followers|pluralize }}</span>,
+          <span id="following">following {{ user.num_following }} user{{ user.num_following|pluralize }}</span>
+        </p>
+      </div>
+      {% if request.user.is_authenticated and not is_own_profile %}
+        <button 
+          class="btn btn-sm follow-button {% if is_following %}btn-danger{% else %}btn-primary{% endif %}"
+          data-username="{{ user.username }}"
+          data-following="{{ is_following }}"
+        >
+          {% if is_following %}Unfollow{% else %}Follow{% endif %}
+        </button>
+      {% endif %}
+    </div>
+    <hr>    
+    <!-- Posts -->
+    {% for post in page %}
+      {% include "network/partials/post_card.html" with post=post show_user=False %}
+    {% empty %}
+      <div class="card mb-3">
+        <div class="card-body">
+          <p class="card-text">No posts yet.</p>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <!--Navigation -->
+  {% include "network/partials/nav_page.html" with page=page %}
+{% endblock %}

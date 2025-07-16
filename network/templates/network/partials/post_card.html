@@ -1,0 +1,61 @@
+<!--Post -->
+<div class="card mb-3">
+  <div class="card-body">    
+    <p class="card-text" id="post-{{ post.id }}">{{ post.text }}</p>
+    <small class="text-muted">
+      {{ post.created }} 
+      {% if show_user %}
+      by <a href="{% url 'profile' post.user.username %}">{{ post.user }}</a>            
+      {% endif %}
+    </small>        
+    <small class="text-muted" id="post-edited-{{ post.id }}">
+      {% if post.was_edited %}(edited){% endif %}            
+    </small>        
+    <div class="mt-2">
+      {% if not request.user.is_authenticated %}
+        <!-- Like Button -->            
+        <button 
+          class="btn btn-sm like-button disabled" 
+          disabled 
+          aria-disabled="true"
+          title="Log in to like posts."
+        >
+        ♡ {{ post.num_likes }}
+        </button>                  
+      {% endif %}
+      {% if post.user == request.user %}
+        <!-- Like Button -->            
+        <button 
+          class="btn btn-sm like-button disabled" 
+          disabled 
+          aria-disabled="true"
+          title="You can't like your own posts."
+        >
+          ♡ {{ post.num_likes }}
+        </button>     
+        <!-- Edit Button -->
+        <button 
+          class="btn btn-sm btn-outline-secondary edit-button" 
+          data-post-id="{{ post.id }}"
+          data-post-text="{{ post.text|escapejs }}"
+        >
+        ✏️ Edit
+        </button>
+      {% else %}
+        <!-- Like Button -->
+        <button 
+          class="btn btn-sm like-button {% if request.user in post.likes.all %}liked{% endif %}" 
+          data-post-id="{{ post.id }}"
+          aria-pressed="{% if request.user in post.likes.all %}true{% else %}false{% endif %}"
+        >
+          {% if request.user in post.likes.all %}
+            ❤️
+          {% else %}
+            ♡
+          {% endif %}
+          {{ post.likes.count }}
+        </button>     
+      {% endif %}          
+    </div>
+  </div>
+</div>

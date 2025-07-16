@@ -1,0 +1,31 @@
+<!--Navigation -->
+<nav aria-label="Page navigation example">
+  <ul class="pagination justify-content-end">
+    {# Previous link #}
+    <li class="page-item {% if not page.has_previous %}disabled{% endif %}">
+      <a class="page-link"
+        href="{% if page.has_previous %}?page={{ page.previous_page_number }}{% else %}#{% endif %}"
+        tabindex="-1"
+        aria-disabled="{% if page.has_previous %}false{% else %}true{% endif %}">
+        &laquo;
+      </a>
+    </li>
+    {# Page range: current ±3 #}
+    {% for num in page.paginator.page_range %}
+      {% if num >= page.number|add:'-3' and num <= page.number|add:'3' %}
+        <li class="page-item {% if num == page.number %}active{% endif %}">
+          <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}            
+    {# Next link #}
+    <li class="page-item {% if not page.has_next %}disabled{% endif %}">
+      <a class="page-link"
+        href="{% if page.has_next %}?page={{ page.next_page_number }}{% else %}#{% endif %}"
+        tabindex="-1"
+        aria-disabled="{% if page.has_next %}false{% else %}true{% endif %}">
+        &raquo;
+      </a>
+    </li>
+  </ul>
+</nav>
