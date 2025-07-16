@@ -8,6 +8,59 @@ from django.urls import reverse
 from network.models import Post, User
 
 
+class AuthRedirectTest(TestCase):
+    """Tests that login and register views respect the `next` parameter."""
+
+    def setUp(self):
+        self.client = Client()
+        self.login_url = reverse("login")
+        self.register_url = reverse("register")
+        self.following_url = reverse("following")
+        self.user = User.objects.create_user(username="alice", password="test123")
+
+    def test_login_redirects_to_next(self):
+        """Ensure login with `next` redirects correctly."""
+        response = self.client.post(
+            self.login_url + "?next=" + self.following_url,
+            data={"username": "alice", "password": "test123"},
+        )
+        self.assertRedirects(response, self.following_url)
+
+    def test_login_with_invalid_next_redirects_to_index(self):
+        """Login with invalid `next` parameter should default to index."""
+        response = self.client.post(
+            self.login_url + "?next=https://invalid.com",
+            data={"username": "alice", "password": "test123"},
+        )
+        self.assertRedirects(response, reverse("index"))
+
+    def test_register_redirects_to_next(self):
+        """Ensure register with `next` redirects correctly."""
+        response = self.client.post(
+            self.register_url + "?next=" + self.following_url,
+            data={
+                "username": "bob",
+                "email": "bob@example.com",
+                "password": "test123",
+                "confirmation": "test123",
+            },
+        )
+        self.assertRedirects(response, self.following_url)
+
+    def test_register_with_invalid_next_redirects_to_index(self):
+        """Register with invalid `next` parameter should default to index."""
+        response = self.client.post(
+            self.register_url + "?next=https://invalid.com",
+            data={
+                "username": "charlie",
+                "email": "charlie@example.com",
+                "password": "test123",
+                "confirmation": "test123",
+            },
+        )
+        self.assertRedirects(response, reverse("index"))
+
+
 class ComposeViewTest(TestCase):
     """Tests for the compose method."""
 
