@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from network.models import Follow, Post
+from network.models import Post
 
 User = get_user_model()
 
@@ -46,15 +46,14 @@ class Command(BaseCommand):
         for user in users:
             for _ in range(3):  # 3 posts per user
                 Post.objects.create(
-                    author=user,
-                    content=random.choice(content_samples),
+                    user=user,
+                    text=random.choice(content_samples),
                     timestamp=timezone.now(),
                 )
         self.stdout.write(self.style.SUCCESS("✅ Posts created"))
         # Create follows (alice follows bob and charlie)
-        for followed in users:
-            if followed != alice:
-                Follow.objects.get_or_create(follower=alice, following=followed)
+        for user in (bob, charlie):
+            alice.following.add(user)
         self.stdout.write(self.style.SUCCESS("✅ Follow relationships created"))
         # Random likes: bob likes alice's posts, charlie likes bob's
         for post in Post.objects.filter(author=alice):
