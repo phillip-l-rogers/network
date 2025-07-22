@@ -4,7 +4,6 @@ import random
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
-from django.utils import timezone
 
 from network.models import Post
 
@@ -41,7 +40,6 @@ class Command(BaseCommand):
                 Post.objects.create(
                     user=user,
                     text=random.choice(content_samples),
-                    timestamp=timezone.now(),
                 )
         self.stdout.write(self.style.SUCCESS("✅ Posts created"))
         # Create follows (alice follows bob and charlie)
