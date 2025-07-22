@@ -47,8 +47,8 @@ class Command(BaseCommand):
             alice.following.add(user)
         self.stdout.write(self.style.SUCCESS("✅ Follow relationships created"))
         # Random likes: bob likes alice's posts, charlie likes bob's
-        for post in Post.objects.filter(author=alice):
+        for post in Post.objects.filter(user=alice):
             post.likes.add(bob)
-        for post in Post.objects.filter(author=bob):
+        for post in Post.objects.filter(user=bob):
             post.likes.add(charlie)
         self.stdout.write(self.style.SUCCESS("✅ Likes added"))
