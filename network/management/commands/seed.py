@@ -16,20 +16,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Create test users
-        users_data = [
-            {"username": "alice", "email": "alice@example.com"},
-            {"username": "bob", "email": "bob@example.com"},
-            {"username": "charlie", "email": "charlie@example.com"},
-        ]
-        users = []
-        for data in users_data:
-            user, created = User.objects.get_or_create(
-                username=data["username"], defaults={"email": data["email"]}
-            )
-            if created:
-                user.set_password("testpass")
-                user.save()
-            users.append(user)
+        usernames = ["alice", "bob", "charlie"]
+        for username in usernames:
+            if not User.objects.filter(username=username).exists():
+                email = f"{username}@example.com"
+                User.objects.create_user(
+                    username=username, email=email, password="testpass"
+                )
         alice = User.objects.get(username="alice")
         bob = User.objects.get(username="bob")
         charlie = User.objects.get(username="charlie")
@@ -43,7 +36,7 @@ class Command(BaseCommand):
             "Writing some seed data 💾",
             "Feeling productive today!",
         ]
-        for user in users:
+        for user in (alice, bob, charlie):
             for _ in range(3):  # 3 posts per user
                 Post.objects.create(
                     user=user,
